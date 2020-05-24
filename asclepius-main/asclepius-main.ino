@@ -8,7 +8,7 @@
 #define ALARM1_TIME 600
 #define ALARM2_TIME 1735
 
-RTC_PCF8523 rtc;
+RTC_DS3231 rtc;
 int now;
 int alarm1Triggered;
 int alarm2Triggered;
@@ -49,7 +49,7 @@ void setup () {
         abort();
     }
 
-    if (!rtc.initialized() || rtc.lostPower()) {
+    if (rtc.lostPower()) {
         // When time needs to be set on a new device, or after a power loss, the
         // following line sets the RTC to the date & time this sketch was compiled
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
