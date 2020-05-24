@@ -9,9 +9,9 @@
 // DIM_DELAY_MS defines the number of milliseconds between each brightness value when fading up/down
 #define DIM_DELAY_MS 1000
 
-// ALARM1_TIME and ALARM2_TIME respectively define the morning and evening alarm times
-#define ALARM1_TIME 600
-#define ALARM2_TIME 1735
+// FADE_DOWN_TIME and FADE_UP_TIME respectively define the times when the LED strip is faded up/down
+#define FADE_DOWN_TIME 600
+#define FADE_UP_TIME 1735
 
 RTC_DS3231 rtc;
 int now;
@@ -61,7 +61,7 @@ void setup () {
     }
 
     now = convertToMilitaryTime(rtc.now());
-    if (now > ALARM1_TIME && now < ALARM2_TIME) {
+    if (now > FADE_DOWN_TIME && now < FADE_UP_TIME) {
         DmxSimple.write(1, 0);
     } else {
         DmxSimple.write(1, 255);
@@ -76,10 +76,10 @@ void loop () {
         // reset all alarmTriggered flags at midnight
         alarm1Triggered = 0;
         alarm2Triggered = 0;
-    } else if (now == ALARM1_TIME && !alarm1Triggered) {
+    } else if (now == FADE_DOWN_TIME && !alarm1Triggered) {
         alarm1Triggered = 1;
         fadeDown(DIM_DELAY_MS);
-    } else if (now == ALARM2_TIME && !alarm2Triggered) {
+    } else if (now == FADE_UP_TIME && !alarm2Triggered) {
         alarm2Triggered = 1;
         fadeUp(DIM_DELAY_MS);
     }
