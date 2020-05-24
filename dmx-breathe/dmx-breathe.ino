@@ -1,3 +1,9 @@
+/* dmx-breath.ino
+ * This Arduino program uses the CQRobot DMX Shield with the DMXSimple library
+ * to repeatedly ramp up and ramp down the brightness of a single LED strip,
+ * creating a "breathing" effect.
+ */
+
 #include <DmxSimple.h>
 
 void setup() {

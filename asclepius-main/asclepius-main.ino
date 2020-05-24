@@ -1,3 +1,8 @@
+/* asclepius-main.ino
+ * This Arduino program uses the CQRobot DMX Shield with the DmxSimple library
+ * and a DS3231 RTC module to create a dimming schedule for a single LED strip.
+ */
+
 #include <RTClib.h>
 #include <DmxSimple.h>
 
