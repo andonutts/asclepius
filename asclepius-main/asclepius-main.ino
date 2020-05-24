@@ -20,7 +20,7 @@ int alarm2Triggered;
 
 void fadeUp(int period) {
     int brightness;
-    for (brightness = 0; brightness <= 255; brightness++) {
+    for (brightness = 1; brightness <= 255; brightness++) {
         DmxSimple.write(1, brightness);
         delay(period);
     }
@@ -28,7 +28,7 @@ void fadeUp(int period) {
 
 void fadeDown(int period) {
     int brightness;
-    for (brightness = 255; brightness >= 0; brightness--) {
+    for (brightness = 254; brightness >= 0; brightness--) {
         DmxSimple.write(1, brightness);
         delay(period);
     }
