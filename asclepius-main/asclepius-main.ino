@@ -39,6 +39,9 @@ int convertToMilitaryTime(DateTime now) {
 }
 
 void setup () {
+    // set the pin used to trigger audio playback (active low)
+    pinMode(7, OUTPUT);
+    digitalWrite(7, HIGH);
 
     // set the DMX module to Master mode
     pinMode(2, OUTPUT);
@@ -78,10 +81,14 @@ void loop () {
         alarm2Triggered = 0;
     } else if (now == FADE_DOWN_TIME && !alarm1Triggered) {
         alarm1Triggered = 1;
+        digitalWrite(7, LOW);
         fadeDown(DIM_DELAY_MS);
+        digitalWrite(7, HIGH);
     } else if (now == FADE_UP_TIME && !alarm2Triggered) {
         alarm2Triggered = 1;
+        digitalWrite(7, LOW);
         fadeUp(DIM_DELAY_MS);
+        digitalWrite(7, HIGH);
     }
 
     delay(10000);
