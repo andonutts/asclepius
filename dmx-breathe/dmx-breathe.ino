@@ -6,6 +6,9 @@
 
 #include <DmxSimple.h>
 
+// DIM_DELAY_MS defines the number of milliseconds between each brightness value when fading up/down
+#define DIM_DELAY_MS 10
+
 void setup() {
     pinMode(2, OUTPUT);
     digitalWrite(2, HIGH);
@@ -19,10 +22,10 @@ void loop() {
     // Simple loop to ramp up and down brightness
     for (brightness = 0; brightness <= 255; brightness++) {
         DmxSimple.write(1, brightness);
-        delay(10);
+        delay(DIM_DELAY_MS);
     }
     for (brightness = 255; brightness >= 0; brightness--) {
         DmxSimple.write(1, brightness);
-        delay(10);
+        delay(DIM_DELAY_MS);
     }
 }
