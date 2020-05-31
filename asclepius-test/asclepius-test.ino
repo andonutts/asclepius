@@ -80,9 +80,10 @@ void loop () {
 
     // obtain the current time and convert it to a military time integer
     on_time = convertToMilitaryTime(rtc.now());
+    now = on_time;
 
     // leave LED on for specified duration
-    while(now <= on_time + ON_DURATION_MINS) {
+    while(now < on_time + ON_DURATION_MINS) {
         now = convertToMilitaryTime(rtc.now());
 
         // delay 5 seconds to avoid slamming the RTC with requests
