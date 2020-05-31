@@ -10,7 +10,7 @@
 // from 0% to 100% brightness, or vice versa
 #define TRANSITION_DURATION_MINS 20
 
-// ON_TIME_MINS defines the number of minutes for the LED to remain on after
+// ON_DURATION_MINS defines the number of minutes for the LED to remain on after
 // reaching full brightness
 #define ON_DURATION_MINS 20
 
