@@ -7,53 +7,69 @@
 #include <DmxSimple.h>
 #include "dallas_sunrise_sunset.h"
 
-// DIM_DELAY_MS defines the number of milliseconds between each brightness value when fading up/down
-#define DIM_DELAY_MS 1000
+// TRANSITION_DURATION_MINS defines the number of minutes it takes to transition
+// from 0% to 100% brightness, or vice versa
+#define TRANSITION_DURATION_MINS 20
 
-// FADE_DOWN_TIME and FADE_UP_TIME respectively define the times when the LED strip is faded up/down
-#define FADE_DOWN_TIME 600
-#define FADE_UP_TIME 1735
+// ON_DURATION_MINS defines the number of minutes for the LED to remain on after
+// reaching full brightness
+#define ON_DURATION_MINS 20
+
+// Pin definitions
+#define DMX_MASTER_MODE_PIN 2
+#define DMX_DATA_TX_PIN 4
+#define AUDIO_TRIGGER_PIN 7
 
 RTC_DS3231 rtc;
-int now;
-int alarm1Triggered;
-int alarm2Triggered;
 
-void fadeUp(int period) {
+void fadeUp(int duration) {
     int brightness;
+    int period = duration * 240;
     for (brightness = 1; brightness <= 255; brightness++) {
         DmxSimple.write(1, brightness);
         delay(period);
     }
+    return;
 }
 
-void fadeDown(int period) {
+void fadeDown(int duration) {
     int brightness;
+    int period = duration * 240;
     for (brightness = 254; brightness >= 0; brightness--) {
         DmxSimple.write(1, brightness);
         delay(period);
     }
+    return;
 }
 
-int convertToMilitaryTime(DateTime now) {
+int convertTo24HrFormat(DateTime now) {
     return (now.hour() * 100) + now.minute();
+}
+
+void triggerAudio() {
+    // send a trigger pulse (must be > 125ms) to the audio trigger pin
+    digitalWrite(AUDIO_TRIGGER_PIN, LOW);
+    delay(500);
+    digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
+    return;
 }
 
 void setup () {
     // set the pin used to trigger audio playback (active low)
-    pinMode(7, OUTPUT);
-    digitalWrite(7, HIGH);
+    pinMode(AUDIO_TRIGGER_PIN, OUTPUT);
+    digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
 
     // set the DMX module to Master mode
-    pinMode(2, OUTPUT);
-    digitalWrite(2, HIGH);
+    pinMode(DMX_MASTER_MODE_PIN, OUTPUT);
+    digitalWrite(DMX_MASTER_MODE_PIN, HIGH);
 
     // set the pin that the module will receive commands on
-    DmxSimple.usePin(4);
+    DmxSimple.usePin(DMX_DATA_TX_PIN);
 
     // set number of channels
     DmxSimple.maxChannel(1);
 
+    // begin I2C communication with RTC module
     if (!rtc.begin()) {
         abort();
     }
@@ -64,33 +80,44 @@ void setup () {
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     }
 
-    now = convertToMilitaryTime(rtc.now());
-    if (now > FADE_DOWN_TIME && now < FADE_UP_TIME) {
-        DmxSimple.write(1, 0);
-    } else {
-        DmxSimple.write(1, 255);
-    }
+    // turn off LED initially
+    DmxSimple.write(1, 0);
 }
 
 void loop () {
-    // obtain the current time and convert it to a military time integer
-    now = convertToMilitaryTime(rtc.now());
+    // obtain the current time
+    DateTime now = rtc.now();
+    int time_24hr = convertTo24HrFormat(now);
+    int month = now.month();
+    int day = now.day();
 
-    if (now == 0) {
-        // reset all alarmTriggered flags at midnight
-        alarm1Triggered = 0;
-        alarm2Triggered = 0;
-    } else if (now == FADE_DOWN_TIME && !alarm1Triggered) {
-        alarm1Triggered = 1;
-        digitalWrite(7, LOW);
-        fadeDown(DIM_DELAY_MS);
-        digitalWrite(7, HIGH);
-    } else if (now == FADE_UP_TIME && !alarm2Triggered) {
-        alarm2Triggered = 1;
-        digitalWrite(7, LOW);
-        fadeUp(DIM_DELAY_MS);
-        digitalWrite(7, HIGH);
+    if (time_24hr == sunrise_time[month][day] ||
+        time_24hr == sunset_time[month][day])
+    {
+        int trigger_time = time_24hr;
+        int fade_down_time = time_24hr + ON_DURATION_MINS >= 2400 ? time_24hr + ON_DURATION_MINS - 2400 : time_24hr + ON_DURATION_MINS;
+        triggerAudio();
+
+        fadeUp(TRANSITION_DURATION_MINS);
+        while(time_24hr != fade_down_time) {
+            now = rtc.now();
+            time_24hr = convertTo24HrFormat(now);
+
+            // delay to avoid slamming the RTC with requests
+            delay(2000);
+        }
+        fadeDown(TRANSITION_DURATION_MINS);
+
+        // wait for time to change to avoid immediately triggering the same alarm again
+        while(time_24hr == trigger_time) {
+            now = rtc.now();
+            time_24hr = convertTo24HrFormat(now);
+
+            // delay to avoid slamming the RTC with requests
+            delay(2000);
+        }
     }
 
-    delay(10000);
+    // delay to avoid slamming the RTC with requests
+    delay(5000);
 }
