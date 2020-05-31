@@ -5,6 +5,7 @@
 
 #include <RTClib.h>
 #include <DmxSimple.h>
+#include "dallas_sunrise_sunset.h"
 
 // DIM_DELAY_MS defines the number of milliseconds between each brightness value when fading up/down
 #define DIM_DELAY_MS 1000
