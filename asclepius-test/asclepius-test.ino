@@ -41,6 +41,8 @@ int convertToMilitaryTime(DateTime now) {
 }
 
 void setup () {
+    Serial.begin(9600);
+
     // set the pin used to trigger audio playback (active low)
     pinMode(7, OUTPUT);
     digitalWrite(7, HIGH);
@@ -55,6 +57,8 @@ void setup () {
     // set number of channels
     DmxSimple.maxChannel(1);
 
+    Serial.println("Initializing RTC");
+
     if (!rtc.begin()) {
         abort();
     }
@@ -65,18 +69,26 @@ void setup () {
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     }
 
+    Serial.println("Turning off LED");
+
     // turn off LED initially
     DmxSimple.write(1, 0);
 }
 
 void loop () {
+    Serial.println("Waiting 5 seconds");
+
     // wait 5 seconds
     delay(5000);
+
+    Serial.println("Triggering sound board and increasing LED brightness");
 
     // trigger the sound board on pin 7 and begin increasing the LED brightness
     digitalWrite(7, LOW);
     fadeUp(TRANSITION_DURATION_MINS);
     digitalWrite(7, HIGH);
+
+    Serial.println("Full brightness reached; waiting for specified duration");
 
     // obtain the current time and convert it to a military time integer
     on_time = convertToMilitaryTime(rtc.now());
@@ -88,7 +100,11 @@ void loop () {
         // delay 5 seconds to avoid slamming the RTC with requests
         delay(5000);
     }
+
+    Serial.println("Decreasing LED brightness");
     
     // begin decreasing the LED brightness
     fadeDown(TRANSITION_DURATION_MINS);
+
+    Serial.println("LED is now off");
 }
