@@ -10,7 +10,7 @@
 // from 0% to 100% brightness, or vice versa
 #define TRANSITION_DURATION_MINS 20
 
-// ON_TIME_MINS defines the number of minutes for the LED to remain on after
+// ON_DURATION_MINS defines the number of minutes for the LED to remain on after
 // reaching full brightness
 #define ON_DURATION_MINS 20
 
@@ -92,9 +92,10 @@ void loop () {
 
     // obtain the current time and convert it to a military time integer
     on_time = convertToMilitaryTime(rtc.now());
+    now = on_time;
 
     // leave LED on for specified duration
-    while(now <= on_time + ON_DURATION_MINS) {
+    while(now < on_time + ON_DURATION_MINS) {
         now = convertToMilitaryTime(rtc.now());
 
         // delay 5 seconds to avoid slamming the RTC with requests
