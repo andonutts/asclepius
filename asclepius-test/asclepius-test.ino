@@ -21,7 +21,7 @@ int on_time;
 void fadeUp(int duration) {
     int brightness;
     int period = duration * 240;
-    for (brightness = 1; brightness <= 255; brightness++) {
+    for (brightness = 2; brightness <= 255; brightness++) {
         DmxSimple.write(1, brightness);
         delay(period);
     }
@@ -30,7 +30,7 @@ void fadeUp(int duration) {
 void fadeDown(int duration) {
     int brightness;
     int period = duration * 240;
-    for (brightness = 254; brightness >= 0; brightness--) {
+    for (brightness = 254; brightness >= 1; brightness--) {
         DmxSimple.write(1, brightness);
         delay(period);
     }
@@ -71,8 +71,8 @@ void setup () {
 
     Serial.println("Turning off LED");
 
-    // turn off LED initially
-    DmxSimple.write(1, 0);
+    // set LED to lowest brightness
+    DmxSimple.write(1, 1);
 }
 
 void loop () {

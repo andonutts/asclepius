@@ -20,11 +20,11 @@ void setup() {
 void loop() {
     int brightness;
     // Simple loop to ramp up and down brightness
-    for (brightness = 0; brightness <= 255; brightness++) {
+    for (brightness = 1; brightness <= 255; brightness++) {
         DmxSimple.write(1, brightness);
         delay(DIM_DELAY_MS);
     }
-    for (brightness = 255; brightness >= 0; brightness--) {
+    for (brightness = 255; brightness >= 1; brightness--) {
         DmxSimple.write(1, brightness);
         delay(DIM_DELAY_MS);
     }
