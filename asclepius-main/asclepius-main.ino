@@ -3,6 +3,7 @@
  * and a DS3231 RTC module to create a dimming schedule for a single LED strip.
  */
 
+#include <avr/pgmspace.h>
 #include <RTClib.h>
 #include <DmxSimple.h>
 #include "dallas_sunrise_sunset.h"
@@ -91,9 +92,10 @@ void loop () {
     int month = now.month();
     int day = now.day();
 
-    if (time_24hr == sunrise_time[month][day] ||
-        time_24hr == sunset_time[month][day])
-    {
+    uint16_t sunrise_time = pgm_read_word(&sunrise_time_table[month-1][day-1]);
+    uint16_t sunset_time = pgm_read_word(&sunset_time_table[month-1][day-1]);
+
+    if (time_24hr == sunrise_time || time_24hr == sunset_time) {
         int trigger_time = time_24hr;
         int fade_down_time = time_24hr + ON_DURATION_MINS >= 2400 ? time_24hr + ON_DURATION_MINS - 2400 : time_24hr + ON_DURATION_MINS;
         triggerAudio();
