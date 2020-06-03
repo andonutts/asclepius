@@ -82,7 +82,7 @@ void triggerAudio() {
 
 void executeSunriseScene() {
     // calculate the delay 
-    const int led_step_delay_ms = (float)(TRANSITION_DURATION_SEC / 256) * 1000;
+    const int led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
     Serial.print("led_step_delay_ms = ");
     Serial.println(led_step_delay_ms);
 
