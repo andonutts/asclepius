@@ -16,6 +16,8 @@
 // reaching full brightness
 #define ON_DURATION_MINS 20
 
+#define BASE_BRIGHTNESS 1
+
 // Pin definitions
 #define DMX_MASTER_MODE_PIN 2
 #define DMX_DATA_TX_PIN 4
@@ -43,9 +45,13 @@ const uint8_t dimming_curve[256] PROGMEM = {
 };
 
 void fadeUp(int duration) {
-    int brightness;
     int period = duration * 240;
-    for (brightness = 2; brightness <= 255; brightness++) {
+    int brightness;
+    for (int i = 0; i <= 255; i++) {
+        brightness = BASE_BRIGHTNESS + pgm_read_byte(&dimming_curve[i]);
+        if (brightness > 255) {
+            brightness = 255;
+        }
         DmxSimple.write(1, brightness);
         delay(period);
     }
@@ -53,9 +59,13 @@ void fadeUp(int duration) {
 }
 
 void fadeDown(int duration) {
-    int brightness;
     int period = duration * 240;
-    for (brightness = 254; brightness >= 1; brightness--) {
+    int brightness;
+    for (int i = 255; i >= 0; i--) {
+        brightness = BASE_BRIGHTNESS + pgm_read_byte(&dimming_curve[i]);
+        if (brightness > 255) {
+            brightness = 255;
+        }
         DmxSimple.write(1, brightness);
         delay(period);
     }
@@ -101,7 +111,7 @@ void setup () {
     }
 
     // set LED to lowest brightness initially
-    DmxSimple.write(1, 1);
+    DmxSimple.write(1, BASE_BRIGHTNESS);
 }
 
 void loop () {
