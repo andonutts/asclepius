@@ -10,20 +10,19 @@
 
 // TRANSITION_DURATION_MINS defines the number of minutes it takes to transition
 // from 0% to 100% brightness, or vice versa
-#define TRANSITION_DURATION_MINS 20
+#define TRANSITION_DURATION_MINS 1
 
 // ON_DURATION_MINS defines the number of minutes for the LED to remain on after
 // reaching full brightness
-#define ON_DURATION_MINS 20
-
-#define BASE_BRIGHTNESS 1
+#define ON_DURATION_MINS 1
 
 // Pin definitions
 #define DMX_MASTER_MODE_PIN 2
 #define DMX_DATA_TX_PIN 4
 #define AUDIO_TRIGGER_PIN 7
+#define AUDIO_ACTIVITY_PIN 8
 
-RTC_DS3231 rtc;
+RTC_PCF8523 rtc;
 
 const uint8_t dimming_curve[256] PROGMEM = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
@@ -85,9 +84,15 @@ void triggerAudio() {
 }
 
 void setup () {
+    Serial.begin(9600);
+    Serial.println("PROGRAM START");
+
     // set the pin used to trigger audio playback (active low)
     pinMode(AUDIO_TRIGGER_PIN, OUTPUT);
     digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
+
+    // set the pin used to detect audio activity
+    pinMode(AUDIO_ACTIVITY_PIN, INPUT);
 
     // set the DMX module to Master mode
     pinMode(DMX_MASTER_MODE_PIN, OUTPUT);
@@ -111,7 +116,7 @@ void setup () {
     }
 
     // set LED to lowest brightness initially
-    DmxSimple.write(1, BASE_BRIGHTNESS);
+    DmxSimple.write(1, 0);
 }
 
 void loop () {
@@ -121,32 +126,44 @@ void loop () {
     int month = now.month();
     int day = now.day();
 
+    Serial.print("Time is ");
+    Serial.println(time_24hr);
+
     uint16_t sunrise_time = pgm_read_word(&sunrise_time_table[month-1][day-1]);
     uint16_t sunset_time = pgm_read_word(&sunset_time_table[month-1][day-1]);
 
-    if (time_24hr == sunrise_time || time_24hr == sunset_time) {
-        int trigger_time = time_24hr;
-        int fade_down_time = time_24hr + ON_DURATION_MINS >= 2400 ? time_24hr + ON_DURATION_MINS - 2400 : time_24hr + ON_DURATION_MINS;
-        triggerAudio();
+    if (time_24hr == sunrise_time) {
+        Serial.println("SUNRISE");
+        
+    } else if (time_24hr == sunset_time) {
+        Serial.println("SUNSET");
 
-        fadeUp(TRANSITION_DURATION_MINS);
-        while(time_24hr != fade_down_time) {
-            now = rtc.now();
-            time_24hr = convertTo24HrFormat(now);
 
-            // delay to avoid slamming the RTC with requests
-            delay(2000);
-        }
-        fadeDown(TRANSITION_DURATION_MINS);
 
-        // wait for time to change to avoid immediately triggering the same alarm again
-        while(time_24hr == trigger_time) {
-            now = rtc.now();
-            time_24hr = convertTo24HrFormat(now);
+        // int trigger_time = time_24hr;
+        // int fade_down_time = time_24hr + ON_DURATION_MINS >= 2400 ? time_24hr + ON_DURATION_MINS - 2400 : time_24hr + ON_DURATION_MINS;
+        // triggerAudio();
 
-            // delay to avoid slamming the RTC with requests
-            delay(2000);
-        }
+        // Serial.println("TRIGGERED");
+
+        // fadeUp(TRANSITION_DURATION_MINS);
+        // while(time_24hr != fade_down_time) {
+        //     now = rtc.now();
+        //     time_24hr = convertTo24HrFormat(now);
+
+        //     // delay to avoid slamming the RTC with requests
+        //     delay(2000);
+        // }
+        // fadeDown(TRANSITION_DURATION_MINS);
+
+        // // wait for time to change to avoid immediately triggering the same alarm again
+        // while(time_24hr == trigger_time) {
+        //     now = rtc.now();
+        //     time_24hr = convertTo24HrFormat(now);
+
+        //     // delay to avoid slamming the RTC with requests
+        //     delay(2000);
+        // }
     }
 
     // delay to avoid slamming the RTC with requests
