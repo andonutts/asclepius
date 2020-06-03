@@ -97,15 +97,19 @@ void executeSunriseScene() {
     triggerAudio();
 
     unsigned long previous = millis();
-    unsigned long current = previous;
+    unsigned long current;
+
+    uint32_t start_time = rtc.now().unixtime();
+    uint32_t current_time;
 
     int ramping_down_brightness = 0;
     int finished = 0;
     while(!finished) {
 
         if (!ramping_down_brightness) {
-            current = millis();
-            if (current - previous > led_step_delay_ms * 255) {
+            // wait for a specified period of time before decreasing brightness
+            current_time = rtc.now().unixtime();
+            if (current_time - start_time > TRANSITION_DURATION_SEC) {
                 ramping_down_brightness = 1;
             }
         } else {
