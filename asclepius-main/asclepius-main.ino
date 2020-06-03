@@ -82,7 +82,7 @@ void triggerAudio() {
 
 void executeSunriseScene() {
     // calculate the delay 
-    const int led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
+    const unsigned long led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
     Serial.print("led_step_delay_ms = ");
     Serial.println(led_step_delay_ms);
 
@@ -98,19 +98,27 @@ void executeSunriseScene() {
     unsigned long previous = millis();
     unsigned long current = previous;
 
+    int ramping_down_brightness = 0;
     int finished = 0;
     while(!finished) {
 
-        if (led_step < 255) {
-            // increment the brightness step if the specified duration has
-            // elapsed and the LED is not already at max brightness
+        if (!ramping_down_brightness) {
             current = millis();
-            if (current - previous > led_step_delay_ms) {
-                led_step++;
-                brightness = pgm_read_byte(&dimming_curve[led_step]);
-                setBrightness(brightness);
+            if (current - previous > led_step_delay_ms * 255) {
+                ramping_down_brightness = 1;
+            }
+        } else {
+            if (led_step < 255) {
+                // increment the brightness step if the specified duration has
+                // elapsed and the LED is not already at max brightness
+                current = millis();
+                if (current - previous > led_step_delay_ms) {
+                    led_step++;
+                    brightness = pgm_read_byte(&dimming_curve[led_step]);
+                    setBrightness(brightness);
 
-                previous = millis();
+                    previous = millis();
+                }
             }
         }
 
@@ -132,7 +140,7 @@ void executeSunriseScene() {
 
 void executeSunsetScene() {
     // calculate the delay 
-    const int led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
+    const unsigned long led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
     Serial.print("led_step_delay_ms = ");
     Serial.println(led_step_delay_ms);
 
