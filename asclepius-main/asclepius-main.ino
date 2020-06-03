@@ -86,8 +86,8 @@ void executeSunriseScene() {
     Serial.print("led_step_delay_ms = ");
     Serial.println(led_step_delay_ms);
 
-    // turn on the LED at the lowest brightness level
-    int led_step = 0;
+    // turn on the LED at the highest brightness level
+    int led_step = 255;
     int brightness = pgm_read_byte(&dimming_curve[led_step]);
     setBrightness(brightness);
 
@@ -108,12 +108,12 @@ void executeSunriseScene() {
                 ramping_down_brightness = 1;
             }
         } else {
-            if (led_step < 255) {
+            if (led_step > 0) {
                 // increment the brightness step if the specified duration has
-                // elapsed and the LED is not already at max brightness
+                // elapsed and the LED is not already at lowest brightness
                 current = millis();
                 if (current - previous > led_step_delay_ms) {
-                    led_step++;
+                    led_step--;
                     brightness = pgm_read_byte(&dimming_curve[led_step]);
                     setBrightness(brightness);
 
@@ -144,8 +144,8 @@ void executeSunsetScene() {
     Serial.print("led_step_delay_ms = ");
     Serial.println(led_step_delay_ms);
 
-    // turn on the LED at the highest brightness level
-    int led_step = 255;
+    // turn on the LED at the lowest brightness level
+    int led_step = 0;
     int brightness = pgm_read_byte(&dimming_curve[led_step]);
     setBrightness(brightness);
 
@@ -159,12 +159,12 @@ void executeSunsetScene() {
     int finished = 0;
     while(!finished) {
 
-        if (led_step > 0) {
+        if (led_step < 255) {
             // increment the brightness step if the specified duration has
-            // elapsed and the LED is not already at lowest brightness
+            // elapsed and the LED is not already at max brightness
             current = millis();
             if (current - previous > led_step_delay_ms) {
-                led_step--;
+                led_step++;
                 brightness = pgm_read_byte(&dimming_curve[led_step]);
                 setBrightness(brightness);
 
