@@ -8,13 +8,13 @@
 #include <DmxSimple.h>
 #include "dallas_sunrise_sunset.h"
 
-// TRANSITION_DURATION_MINS defines the number of minutes it takes to transition
+// TRANSITION_DURATION_SEC defines the number of seconds it takes to transition
 // from 0% to 100% brightness, or vice versa
-#define TRANSITION_DURATION_MINS 1
+#define TRANSITION_DURATION_SEC 1152
 
-// ON_DURATION_MINS defines the number of minutes for the LED to remain on after
-// reaching full brightness
-#define ON_DURATION_MINS 1
+// MAX_LOOP_COUNT defines the total number of times the audio file will be looped
+// each time a "scene" is executed
+#define MAX_LOOP_COUNT 4
 
 // Pin definitions
 #define DMX_MASTER_MODE_PIN 2
@@ -22,7 +22,7 @@
 #define AUDIO_TRIGGER_PIN 7
 #define AUDIO_ACTIVITY_PIN 8
 
-
+// exponential dimming curve
 const uint8_t dimming_curve[256] PROGMEM = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
     2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5,
@@ -42,45 +42,88 @@ const uint8_t dimming_curve[256] PROGMEM = {
     227, 229, 231, 233, 234, 236, 238, 240, 242, 244, 246, 248, 250, 252, 254, 255
 };
 
-void fadeUp(int duration) {
-    int period = duration * 240;
-    int brightness;
-    for (int i = 0; i <= 255; i++) {
-        brightness = BASE_BRIGHTNESS + pgm_read_byte(&dimming_curve[i]);
-        if (brightness > 255) {
-            brightness = 255;
-        }
-        DmxSimple.write(1, brightness);
-        delay(period);
-    }
-    return;
-}
 RTC_DS3231 rtc;
 
-void fadeDown(int duration) {
-    int period = duration * 240;
-    int brightness;
-    for (int i = 255; i >= 0; i--) {
-        brightness = BASE_BRIGHTNESS + pgm_read_byte(&dimming_curve[i]);
-        if (brightness > 255) {
-            brightness = 255;
-        }
-        DmxSimple.write(1, brightness);
-        delay(period);
+// set the brightness level of the LED (0-255)
+void setBrightness(int brightness) {
+    if (brightness > 255) {
+        brightness = 255;
+    } else if (brightness < 0) {
+        brightness = 0;
     }
-    return;
+    DmxSimple.write(1, brightness);
 }
 
+// convert a DateTime format to 
 int convertTo24HrFormat(DateTime now) {
     return (now.hour() * 100) + now.minute();
 }
 
+// send a trigger pulse (must be > 125ms) to the audio trigger pin
 void triggerAudio() {
-    // send a trigger pulse (must be > 125ms) to the audio trigger pin
     digitalWrite(AUDIO_TRIGGER_PIN, LOW);
-    delay(500);
+    delay(300);
     digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
     return;
+}
+
+// query the sound board's Act pin to see if audio is currently playing
+int audioIsPlaying() {
+    return (digitalRead(AUDIO_ACTIVITY_PIN) == LOW ? 1 : 0);
+}
+
+void executeSunriseScene() {
+    // calculate the delay 
+    const int led_step_delay_ms = (float)(TRANSITION_DURATION_SEC / 256) * 1000;
+    Serial.print("led_step_delay_ms = ");
+    Serial.println(led_step_delay_ms);
+
+    // turn on the LED at the lowest brightness level
+    int led_step = 0;
+    int brightness = pgm_read_byte(&dimming_curve[led_step]);
+    setBrightness(brightness);
+
+    // trigger audio playback
+    int play_count = 1;
+    triggerAudio();
+
+    unsigned long previous = millis();
+    unsigned long current = previous;
+
+    int finished = 0;
+    while(!finished) {
+
+        if (led_step < 255) {
+            // increment the brightness step if the specified duration has
+            // elapsed and the LED is not already at max brightness
+            current = millis();
+            if (current - previous > led_step_delay_ms) {
+                led_step++;
+                brightness = pgm_read_byte(&dimming_curve[led_step]);
+                setBrightness(brightness);
+
+                previous = millis();
+            }
+        }
+
+        if (!audioIsPlaying()) {
+            if (play_count < MAX_LOOP_COUNT) {
+                // loop audio file if max play count has not yet been reached
+                triggerAudio();
+                play_count++;
+            } else {
+                // once the final audio playback is completed, turn off the LED
+                setBrightness(0);
+                finished = 1;
+            }
+        }
+
+        delay(100);
+    }
+}
+
+void executeSunsetScene() {
+
 }
 
 void setup () {
@@ -115,7 +158,7 @@ void setup () {
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     }
 
-    // set LED to lowest brightness initially
+    // turn off LED
     DmxSimple.write(1, 0);
 }
 
@@ -134,38 +177,33 @@ void loop () {
 
     if (time_24hr == sunrise_time) {
         Serial.println("SUNRISE");
+
+        executeSunriseScene();
+        
+        // wait for time to change to avoid immediately triggering the same alarm again
+        while(time_24hr == sunrise_time) {
+            now = rtc.now();
+            time_24hr = convertTo24HrFormat(now);
+
+            // delay to avoid slamming the RTC with requests
+            delay(1000);
+        }
         
     } else if (time_24hr == sunset_time) {
         Serial.println("SUNSET");
 
+        executeSunsetScene();
 
+        // wait for time to change to avoid immediately triggering the same alarm again
+        while(time_24hr == sunset_time) {
+            now = rtc.now();
+            time_24hr = convertTo24HrFormat(now);
 
-        // int trigger_time = time_24hr;
-        // int fade_down_time = time_24hr + ON_DURATION_MINS >= 2400 ? time_24hr + ON_DURATION_MINS - 2400 : time_24hr + ON_DURATION_MINS;
-        // triggerAudio();
-
-        // Serial.println("TRIGGERED");
-
-        // fadeUp(TRANSITION_DURATION_MINS);
-        // while(time_24hr != fade_down_time) {
-        //     now = rtc.now();
-        //     time_24hr = convertTo24HrFormat(now);
-
-        //     // delay to avoid slamming the RTC with requests
-        //     delay(2000);
-        // }
-        // fadeDown(TRANSITION_DURATION_MINS);
-
-        // // wait for time to change to avoid immediately triggering the same alarm again
-        // while(time_24hr == trigger_time) {
-        //     now = rtc.now();
-        //     time_24hr = convertTo24HrFormat(now);
-
-        //     // delay to avoid slamming the RTC with requests
-        //     delay(2000);
-        // }
+            // delay to avoid slamming the RTC with requests
+            delay(1000);
+        }
     }
 
     // delay to avoid slamming the RTC with requests
-    delay(5000);
+    delay(1000);
 }
