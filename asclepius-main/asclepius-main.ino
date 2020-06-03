@@ -59,17 +59,25 @@ int convertTo24HrFormat(DateTime now) {
     return (now.hour() * 100) + now.minute();
 }
 
+// query the sound board's Act pin to see if audio is currently playing
+int audioIsPlaying() {
+    return (digitalRead(AUDIO_ACTIVITY_PIN) == LOW ? 1 : 0);
+}
+
 // send a trigger pulse (must be > 125ms) to the audio trigger pin
 void triggerAudio() {
     digitalWrite(AUDIO_TRIGGER_PIN, LOW);
     delay(300);
     digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
-    return;
-}
 
-// query the sound board's Act pin to see if audio is currently playing
-int audioIsPlaying() {
-    return (digitalRead(AUDIO_ACTIVITY_PIN) == LOW ? 1 : 0);
+    // wait for Act pin to indicate playback with a 1 sec timeout
+    unsigned long previous = millis();
+    unsigned long current = previous;
+    while(!audioIsPlaying() && current - previous < 1000) {
+        current = millis();
+        delay(50);
+    }
+    return;
 }
 
 void executeSunriseScene() {
@@ -128,6 +136,7 @@ void executeSunsetScene() {
 
 void setup () {
     Serial.begin(9600);
+    delay(3000);
     Serial.println("PROGRAM START");
 
     // set the pin used to trigger audio playback (active low)
@@ -135,7 +144,7 @@ void setup () {
     digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
 
     // set the pin used to detect audio activity
-    pinMode(AUDIO_ACTIVITY_PIN, INPUT);
+    pinMode(AUDIO_ACTIVITY_PIN, INPUT_PULLUP);
 
     // set the DMX module to Master mode
     pinMode(DMX_MASTER_MODE_PIN, OUTPUT);
