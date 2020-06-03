@@ -6,11 +6,23 @@
 #define AUDIO_TRIGGER_PIN 7
 #define AUDIO_ACTIVITY_PIN 8
 
+// query the sound board's Act pin to see if audio is currently playing
+int audioIsPlaying() {
+    return (digitalRead(AUDIO_ACTIVITY_PIN) == LOW ? 1 : 0);
+}
+
 void triggerAudio() {
-    // send a trigger pulse (must be > 125ms) to the audio trigger pin
     digitalWrite(AUDIO_TRIGGER_PIN, LOW);
-    delay(500);
+    delay(300);
     digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
+
+    // wait for Act pin to indicate playback with a 1 sec timeout
+    unsigned long previous = millis();
+    unsigned long current = previous;
+    while(!audioIsPlaying() && current - previous < 1000) {
+        current = millis();
+        delay(50);
+    }
     return;
 }
 
