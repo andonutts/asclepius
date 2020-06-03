@@ -22,7 +22,6 @@
 #define AUDIO_TRIGGER_PIN 7
 #define AUDIO_ACTIVITY_PIN 8
 
-RTC_PCF8523 rtc;
 
 const uint8_t dimming_curve[256] PROGMEM = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
@@ -56,6 +55,7 @@ void fadeUp(int duration) {
     }
     return;
 }
+RTC_DS3231 rtc;
 
 void fadeDown(int duration) {
     int period = duration * 240;
