@@ -6,8 +6,6 @@
 #define AUDIO_TRIGGER_PIN 7
 #define AUDIO_ACTIVITY_PIN 8
 
-RTC_DS3231 rtc;
-
 void triggerAudio() {
     // send a trigger pulse (must be > 125ms) to the audio trigger pin
     digitalWrite(AUDIO_TRIGGER_PIN, LOW);
