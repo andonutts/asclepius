@@ -80,6 +80,7 @@ void triggerAudio() {
     return;
 }
 
+// start at the highest brightness and ramp down after a period of time
 void executeSunriseScene() {
     // calculate the delay 
     const unsigned long led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
@@ -138,6 +139,7 @@ void executeSunriseScene() {
     }
 }
 
+// start at the lowest brightness and ramp up
 void executeSunsetScene() {
     // calculate the delay 
     const unsigned long led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
