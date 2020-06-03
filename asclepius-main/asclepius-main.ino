@@ -153,7 +153,7 @@ void executeSunsetScene() {
 
         if (led_step > 0) {
             // increment the brightness step if the specified duration has
-            // elapsed and the LED is not already at max brightness
+            // elapsed and the LED is not already at lowest brightness
             current = millis();
             if (current - previous > led_step_delay_ms) {
                 led_step--;
