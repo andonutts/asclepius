@@ -131,7 +131,53 @@ void executeSunriseScene() {
 }
 
 void executeSunsetScene() {
+    // calculate the delay 
+    const int led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
+    Serial.print("led_step_delay_ms = ");
+    Serial.println(led_step_delay_ms);
 
+    // turn on the LED at the highest brightness level
+    int led_step = 255;
+    int brightness = pgm_read_byte(&dimming_curve[led_step]);
+    setBrightness(brightness);
+
+    // trigger audio playback
+    int play_count = 1;
+    triggerAudio();
+
+    unsigned long previous = millis();
+    unsigned long current = previous;
+
+    int finished = 0;
+    while(!finished) {
+
+        if (led_step > 0) {
+            // increment the brightness step if the specified duration has
+            // elapsed and the LED is not already at max brightness
+            current = millis();
+            if (current - previous > led_step_delay_ms) {
+                led_step--;
+                brightness = pgm_read_byte(&dimming_curve[led_step]);
+                setBrightness(brightness);
+
+                previous = millis();
+            }
+        }
+
+        if (!audioIsPlaying()) {
+            if (play_count < MAX_LOOP_COUNT) {
+                // loop audio file if max play count has not yet been reached
+                triggerAudio();
+                play_count++;
+            } else {
+                // once the final audio playback is completed, turn off the LED
+                setBrightness(0);
+                finished = 1;
+            }
+        }
+
+        delay(100);
+    }
 }
 
 void setup () {
