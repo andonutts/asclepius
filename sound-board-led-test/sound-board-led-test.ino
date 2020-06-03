@@ -23,7 +23,7 @@ void setup () {
     digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
 
     // set the pin used to detect audio activity
-    pinMode(AUDIO_ACTIVITY_PIN, INPUT);
+    pinMode(AUDIO_ACTIVITY_PIN, INPUT_PULLUP);
 
     // set the DMX module to Master mode
     pinMode(DMX_MASTER_MODE_PIN, OUTPUT);
