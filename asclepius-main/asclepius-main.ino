@@ -221,11 +221,9 @@ void setup () {
         abort();
     }
 
-    if (rtc.lostPower()) {
-        // When time needs to be set on a new device, or after a power loss, the
-        // following line sets the RTC to the date & time this sketch was compiled
-        rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    }
+    // When time needs to be set on a new device, or after a power loss, the
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
     // turn off LED
     DmxSimple.write(1, 0);
