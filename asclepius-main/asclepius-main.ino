@@ -84,8 +84,6 @@ void triggerAudio() {
 void executeSunriseScene() {
     // calculate the delay 
     const unsigned long led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
-    Serial.print("led_step_delay_ms = ");
-    Serial.println(led_step_delay_ms);
 
     // turn on the LED at the highest brightness level
     int led_step = 255;
@@ -147,8 +145,6 @@ void executeSunriseScene() {
 void executeSunsetScene() {
     // calculate the delay 
     const unsigned long led_step_delay_ms = ((float)TRANSITION_DURATION_SEC / 256.0f) * 1000;
-    Serial.print("led_step_delay_ms = ");
-    Serial.println(led_step_delay_ms);
 
     // turn on the LED at the lowest brightness level
     int led_step = 0;
@@ -195,10 +191,6 @@ void executeSunsetScene() {
 }
 
 void setup () {
-    Serial.begin(9600);
-    delay(3000);
-    Serial.println("PROGRAM START");
-
     // set the pin used to trigger audio playback (active low)
     pinMode(AUDIO_TRIGGER_PIN, OUTPUT);
     digitalWrite(AUDIO_TRIGGER_PIN, HIGH);
@@ -236,14 +228,10 @@ void loop () {
     int month = now.month();
     int day = now.day();
 
-    Serial.print("Time is ");
-    Serial.println(time_24hr);
-
     uint16_t sunrise_time = pgm_read_word(&sunrise_time_table[month-1][day-1]);
     uint16_t sunset_time = pgm_read_word(&sunset_time_table[month-1][day-1]);
 
     if (time_24hr == sunrise_time) {
-        Serial.println("SUNRISE");
 
         executeSunriseScene();
         
@@ -257,7 +245,6 @@ void loop () {
         }
         
     } else if (time_24hr == sunset_time) {
-        Serial.println("SUNSET");
 
         executeSunsetScene();
 
